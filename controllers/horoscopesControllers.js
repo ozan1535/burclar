@@ -1,4 +1,7 @@
-import { fetchHoroscopeData } from "./../helpers/helpers.js";
+import {
+  fetchHoroscopeData,
+  fetchAllHoroscopes,
+} from "./../helpers/helpers.js";
 
 // @desc    Get daily horoscope
 // @route   GET /horoscope/gunluk/:id
@@ -12,6 +15,10 @@ export const getDailyHoroscope = (req, res) => {
     "horoscope",
     "horoscopeInfo"
   );
+};
+
+export const getDailyAllHoroscope = (req, res) => {
+  fetchAllHoroscopes(req, res, "-burcu-gunluk-yorum");
 };
 
 // @desc    Get weekly horoscope
@@ -28,6 +35,10 @@ export const getWeeklyHoroscope = (req, res) => {
   );
 };
 
+export const getWeeklyAllHoroscope = (req, res) => {
+  fetchAllHoroscopes(req, res, "-burcu-haftalik-yorum");
+};
+
 // @desc    Get horoscope features
 // @route   GET /horoscope/ozellik/:id
 export const getHoroscopeFeatures = (req, res) => {
@@ -40,4 +51,7 @@ export const getHoroscopeFeatures = (req, res) => {
     "horoscope",
     "horoscopeInfo"
   );
+};
+export const getAllHoroscopeFeatures = (req, res) => {
+  fetchAllHoroscopes(req, res, "-burcu-ozellikleri");
 };

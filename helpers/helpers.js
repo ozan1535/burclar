@@ -1,6 +1,23 @@
 import * as cheerio from "cheerio";
 import axios from "axios";
 
+const baseUrl = process.env.baseUrl;
+
+export const horoscopeNames = [
+  "koç",
+  "boğa",
+  "ikizler",
+  "yengeç",
+  "aslan",
+  "başak",
+  "terazi",
+  "akrep",
+  "yay",
+  "oğlak",
+  "kova",
+  "balik",
+];
+
 export const getTr2En = (text) => {
   const Maps = {
     İ: "I",
@@ -56,26 +73,60 @@ export const getDataItemsOnWebsite = (data) => {
   return { dataText, dataHtml, horoscope, horoscopeInfo };
 };
 
-export const fetchHoroscopeData = async (req, res, urlSuffix) => {
-  const baseUrl = process.env.baseUrl;
-  const id = req.params.id.toLowerCase();
-  const tr2En = getTr2En(id);
+const handleHoroscopeFetch = async (name, urlSuffix) => {
+  const tr2EnName = getTr2En(name.toLowerCase());
+
   try {
-    const { data } = await axios.get(`${baseUrl}/${tr2En}${urlSuffix}`);
+    const { data } = await axios.get(`${baseUrl}/${tr2EnName}${urlSuffix}`);
     const { dataText, dataHtml, horoscope, horoscopeInfo } =
       getDataItemsOnWebsite(data);
 
-    res
-      .status(200)
-      .json(getData(dataText, dataHtml, horoscope.trim(), horoscopeInfo));
+    return {
+      success: true,
+      data: getData(dataText, dataHtml, horoscope.trim(), horoscopeInfo),
+    };
   } catch (error) {
-    console.log(error, "hehehe");
-    res.status(error.status).json({
-      message:
+    return {
+      success: false,
+      error:
         error.status === 404
-          ? "Girilen burç bulumadı."
+          ? "Girilen burç bulunamadı."
           : "Bir hata meydana geldi.",
-      status: error.status,
+      status: error.status || 500,
+    };
+  }
+};
+
+export const fetchHoroscopeData = async (req, res, urlSuffix) => {
+  const { id } = req.params;
+
+  const result = await handleHoroscopeFetch(id, urlSuffix);
+
+  if (result.success) {
+    res.status(200).json(result.data);
+  } else {
+    res.status(result.status).json({
+      message: result.error,
+      status: result.status,
+      success: false,
+    });
+  }
+};
+
+export const fetchAllHoroscopes = async (req, res, urlSuffix) => {
+  try {
+    const results = await Promise.all(
+      horoscopeNames.map((name) => handleHoroscopeFetch(name, urlSuffix))
+    );
+
+    const formattedResults = results.map((result) =>
+      result.success ? result.data : result
+    );
+
+    res.status(200).json(formattedResults);
+  } catch (err) {
+    res.status(500).json({
+      message: "Tüm burçlar alınırken bir hata meydana geldi.",
       success: false,
     });
   }
